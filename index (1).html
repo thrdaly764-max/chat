@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>شات</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,"Segoe UI",Tahoma,sans-serif}
+html,body{height:100%}body{background:#0b1030;color:#fff;display:flex;flex-direction:column;height:100dvh}
+.top{padding:14px 16px;background:linear-gradient(135deg,#4b2bb8,#0f7f9c);display:flex;align-items:center;gap:10px;font-size:19px;font-weight:700}
+.top .sp{flex:1}.top button{background:none;border:0;color:#fff;font-size:22px}
+.v{display:none;flex:1;flex-direction:column;min-height:0}.v.on{display:flex}
+#login{align-items:center;justify-content:center;padding:24px;gap:12px}
+#login h1{font-size:34px;color:#4fd9e8}
+input{background:#151a42;border:1px solid #343a7a;border-radius:14px;padding:13px 15px;color:#fff;font-size:16px;width:100%}
+.btn{background:linear-gradient(135deg,#7c4dff,#1fb5d0);border:0;border-radius:14px;color:#fff;padding:13px;font-size:17px;width:100%}
+.lnk{color:#8fb0ff;font-size:14px;text-decoration:underline}
+.err{color:#ff8a8a;font-size:14px;min-height:18px}
+#list{flex:1;overflow:auto}
+.row{padding:14px 16px;border-bottom:1px solid #1b2150;display:flex;gap:12px;align-items:center}
+.av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#1fd1c1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;flex:none}
+.row small{color:#9aa3d8;display:block;margin-top:3px;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fab{position:fixed;bottom:22px;left:22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#1fd1c1,#4d7cff);border:0;color:#fff;font-size:28px}
+#msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px;background:#0e1438}
+.b{max-width:80%;padding:9px 12px;border-radius:16px;line-height:1.6;font-size:16px;word-break:break-word}
+.me{background:linear-gradient(135deg,#6b3fe0,#a73fd0);align-self:flex-start;border-bottom-right-radius:4px}
+.ot{background:#1d2354;align-self:flex-end;border-bottom-left-radius:4px}
+.b img{max-width:100%;border-radius:10px;display:block;margin-bottom:4px}
+.b time{display:block;font-size:11px;opacity:.6;margin-top:2px}
+.f{display:flex;gap:8px;align-items:center;background:#0003;border-radius:10px;padding:8px;color:#fff;text-decoration:none}
+#bar{display:flex;gap:8px;padding:10px;background:#0b1030;align-items:center}
+#bar button{width:46px;height:46px;border-radius:50%;border:0;color:#fff;font-size:20px;background:#2a3070;flex:none}
+#bar .go{background:linear-gradient(135deg,#1fd1c1,#4d7cff)}
+#srch{padding:10px}
+</style></head><body>
+<div id="login" class="v on"><h1>💬 شات</h1><div id="lt" style="font-size:18px">تسجيل دخول</div>
+<input id="un" placeholder="الاسم (إنجليزي)" autocapitalize="none" autocomplete="off"><input id="pw" type="password" placeholder="الباسورد (6 حروف على الأقل)">
+<div class="err" id="le"></div><button class="btn" id="lb">دخول</button><span class="lnk" id="ls">مفيش عندي حساب، أنشئ حساب</span></div>
+<div id="home" class="v"><div class="top"><span>💬 شات</span><span class="sp"></span><button id="out">⏻</button></div><div id="list"></div><button class="fab" id="nw">＋</button></div>
+<div id="find" class="v"><div class="top"><button id="fb">→</button><span>دور على حد</span></div><div id="srch"><input id="q" placeholder="اكتب اسمه" autocapitalize="none"></div><div id="res" style="overflow:auto"></div></div>
+<div id="chat" class="v"><div class="top"><button id="cb">→</button><div class="av" id="cav" style="width:38px;height:38px;font-size:16px"></div><span id="cn"></span></div><div id="msgs"></div>
+<div id="bar"><button id="at">📎</button><input id="tx" placeholder="اكتب رسالة" autocomplete="off"><button class="go" id="sd">➤</button></div><input type="file" id="fi" hidden></div>
+<script>
+const $=i=>document.getElementById(i);let T=localStorage.getItem('t'),ME=localStorage.getItem('n'),reg=false,cur=null,es=null,chats=[];
+function show(v){document.querySelectorAll('.v').forEach(x=>x.classList.remove('on'));$(v).classList.add('on')}
+async function api(p,o){o=o||{};o.headers=Object.assign({'x-token':T||''},o.headers||{});if(o.body&&typeof o.body!=='string'){o.body=JSON.stringify(o.body);o.method='POST';o.headers['Content-Type']='application/json'}
+const r=await fetch(p,o);const j=await r.json();if(r.status===401){logout();throw 0}if(!r.ok)throw new Error(j.error||'خطأ');return j}
+$('ls').onclick=()=>{reg=!reg;$('lt').textContent=reg?'إنشاء حساب':'تسجيل دخول';$('lb').textContent=reg?'إنشاء':'دخول';$('ls').textContent=reg?'عندي حساب، دخول':'مفيش عندي حساب، أنشئ حساب'};
+$('lb').onclick=async()=>{try{const j=await api(reg?'/api/register':'/api/login',{body:{name:$('un').value,password:$('pw').value}});T=j.token;ME=j.name;localStorage.setItem('t',T);localStorage.setItem('n',ME);start()}catch(e){$('le').textContent=e.message||''}};
+function logout(){localStorage.clear();T=ME=null;if(es)es.close();show('login')}
+$('out').onclick=logout;
+function ini(n){return n[0].toUpperCase()}
+function prev(m){return m.file?(m.file.type.startsWith('image/')?'📷 صورة':'📎 '+m.file.name):m.text}
+async function loadChats(){chats=await api('/api/chats');$('list').innerHTML=chats.length?'':'<p style="padding:30px;text-align:center;color:#9aa3d8">لسه مفيش محادثات. اضغط ＋ وكلم حد.</p>';chats.forEach(c=>{const d=document.createElement('div');d.className='row';d.innerHTML='<div class="av">'+ini(c.with)+'</div><div><b></b><small></small></div>';d.querySelector('b').textContent=c.with;d.querySelector('small').textContent=(c.last.from===ME?'أنت: ':'')+prev(c.last);d.onclick=()=>open(c.with);$('list').appendChild(d)})}
+$('nw').onclick=()=>{show('find');$('q').value='';find()};$('fb').onclick=()=>{show('home');loadChats()};
+async function find(){const r=await api('/api/users?q='+encodeURIComponent($('q').value));$('res').innerHTML=r.length?'':'<p style="padding:20px;color:#9aa3d8">مفيش حد بالاسم ده</p>';r.forEach(n=>{const d=document.createElement('div');d.className='row';d.innerHTML='<div class="av">'+ini(n)+'</div><b></b>';d.querySelector('b').textContent=n;d.onclick=()=>open(n);$('res').appendChild(d)})}
+$('q').oninput=find;
+function tm(ts){const d=new Date(ts);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')}
+function add(m){const o=document.createElement('div');o.className='b '+(m.from===ME?'me':'ot');if(m.file){const u='/api/file/'+m.file.id+'?t='+T;if(m.file.type.startsWith('image/')){const a=document.createElement('a');a.href=u;a.target='_blank';const i=document.createElement('img');i.src=u;i.loading='lazy';a.appendChild(i);o.appendChild(a)}else{const a=document.createElement('a');a.className='f';a.href=u;a.target='_blank';a.textContent='📎 '+m.file.name+' ('+Math.ceil(m.file.size/1024)+' ك)';o.appendChild(a)}}
+if(m.text){const s=document.createElement('span');s.textContent=m.text;o.appendChild(s)}const t=document.createElement('time');t.textContent=tm(m.ts);o.appendChild(t);$('msgs').appendChild(o);$('msgs').scrollTop=1e9}
+async function open(n){cur=n;$('cn').textContent=n;$('cav').textContent=ini(n);$('msgs').innerHTML='';show('chat');(await api('/api/messages?with='+encodeURIComponent(n))).forEach(add)}
+$('cb').onclick=()=>{cur=null;show('home');loadChats()};
+async function sendMsg(extra){const text=$('tx').value.trim();if(!text&&!extra)return;$('tx').value='';try{await api('/api/send',{body:Object.assign({to:cur,text:extra?'':text},extra?{file:extra}:{})})}catch(e){alert(e.message)}}
+$('sd').onclick=()=>sendMsg();$('tx').onkeydown=e=>{if(e.key==='Enter')sendMsg()};
+$('at').onclick=()=>$('fi').click();
+$('fi').onchange=async()=>{const f=$('fi').files[0];$('fi').value='';if(!f)return;if(f.type.startsWith('image/')){const b=await shrink(f);return sendMsg({name:f.name.replace(/\.\w+$/,'')+'.jpg',type:'image/jpeg',data:b})}
+if(f.size>5e6)return alert('الملف كبير، الحد 5 ميجا');const r=new FileReader();r.onload=()=>sendMsg({name:f.name,type:f.type||'application/octet-stream',data:r.result.split(',')[1]});r.readAsDataURL(f)};
+function shrink(f){return new Promise(ok=>{const i=new Image();i.onload=()=>{const s=Math.min(1,1280/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.8).split(',')[1])};i.src=URL.createObjectURL(f)})}
+function stream(){if(es)es.close();es=new EventSource('/api/stream?t='+T);es.onmessage=e=>{const m=JSON.parse(e.data).m;if(!m)return;const o=m.from===ME?m.to:m.from;if(cur===o)add(m);else if($('home').classList.contains('on'))loadChats()}}
+function start(){show('home');loadChats();stream()}
+if(T)start();
+</script></body></html>
